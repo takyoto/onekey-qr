@@ -62,10 +62,14 @@ def decode_qr_codes(img: np.ndarray) -> list[str]:
 
     def collect(target: np.ndarray) -> None:
         ok, texts, _points, _ = detector.detectAndDecodeMulti(target)
-        if ok:
-            for t in texts:
-                if t and t not in results:
-                    results.append(t)
+        if not ok or not any(texts):
+            # detectAndDecodeMulti misses some codes (depending on their size)
+            # that the single-code detector can read, so fall back to it
+            text, _points, _ = detector.detectAndDecode(target)
+            texts = (text,)
+        for t in texts:
+            if t and t not in results:
+                results.append(t)
 
     collect(img)
 

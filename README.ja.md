@@ -1,5 +1,7 @@
 # OneKey QR
 
+[![CI](https://github.com/takyoto/onekey-qr/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/takyoto/onekey-qr/actions/workflows/test.yml)
+
 [English](README.md) | 日本語
 
 **スマホと同じくらい手軽に、パソコンの画面のQRコードを。キーを1回押すだけで読み取れます。**
@@ -13,7 +15,7 @@
 ## 動作環境
 
 - Windows 10 / 11
-- Python 3.9 以上
+- Python 3.10 以上
 
 ## インストール
 
@@ -84,6 +86,17 @@ HOTKEY = "windows+shift+q"
   - **設定 → システム → 通知** で、「通知」がオンになっているか
   - 「応答不可」（Windows 11）または「集中モード」（Windows 10）がオフになっているか
   - 同じ画面のアプリ一覧で、送り主のアプリ（Windows PowerShell や Python など）がオフになっていないか
+
+## 開発
+
+開発用の依存ライブラリを入れて、テストを実行します。
+
+```
+pip install -r requirements-dev.txt
+pytest
+```
+
+テストの対象は、QRコードの読み取り（OpenCV で作ったQR画像を使用）と、読み取りからコピー・通知までの流れ（画面キャプチャ・クリップボード・通知は偽物に差し替え）です。ホットキー、実際の画面キャプチャ、トースト通知は Windows のデスクトップ環境に依存するため、手で動かして確認してください。
 
 ## ライセンス
 

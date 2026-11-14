@@ -1,0 +1,41 @@
+name: CI
+
+# Runs only when .py files change.
+# Note: if this check is ever made required in a ruleset, PRs without .py changes
+# would wait forever for it. Switch to job-level filtering with an aggregate
+# result job at that point.
+on:
+  pull_request:
+    paths:
+      - "**.py"
+  push:
+    branches: [main]
+    paths:
+      - "**.py"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # keyboard / win11toast are Windows-only, so test on Windows
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest -v
