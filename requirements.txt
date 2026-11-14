@@ -1,0 +1,6 @@
+keyboard
+mss
+opencv-python
+numpy
+pyperclip
+win11toast
