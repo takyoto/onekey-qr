@@ -1,5 +1,7 @@
 # OneKey QR
 
+[![CI](https://github.com/takyoto/onekey-qr/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/takyoto/onekey-qr/actions/workflows/test.yml)
+
 English | [日本語](README.ja.md)
 
 **Read QR codes on your PC screen as easily as with your phone — just press one hotkey.**
@@ -12,8 +14,8 @@ Scanning a QR code takes a single tap on a smartphone, but on a PC it usually me
 
 ## Requirements
 
-- Windows 10 / 11
-- Python 3.9 or later
+- Windows 11
+- Python 3.10 or later
 
 ## Installation
 
@@ -84,6 +86,17 @@ For example, with `Ctrl+Alt+Q`, pressing Q before Alt sends `Ctrl+Q`, which clos
   - **Settings → System → Notifications**: make sure **Notifications** is turned on.
   - Make sure **Do not disturb** (Windows 11) or **Focus assist** (Windows 10) is off.
   - In the app list on the same page, make sure the sender app (such as Windows PowerShell or Python) is not turned off.
+
+## Development
+
+Install the development dependencies and run the tests:
+
+```
+pip install -r requirements-dev.txt
+pytest
+```
+
+The tests cover QR code decoding (using QR images generated with OpenCV) and the scan flow (with screen capture, clipboard and notifications replaced by fakes). The hotkey, actual screen capture and toast notifications depend on the Windows desktop, so check them manually.
 
 ## License
 
