@@ -9,9 +9,16 @@ import pytest
 from onekey_qr import decode_qr_codes
 
 
-def make_qr(text: str, scale: int = 8, border: int = 40) -> np.ndarray:
+def make_qr(
+    text: str,
+    scale: int = 8,
+    border: int = 40,
+    mode: int = cv2.QRCODE_ENCODER_MODE_AUTO,
+) -> np.ndarray:
     """Return a BGR image of a QR code encoding `text`, with a white margin."""
-    qr = cv2.QRCodeEncoder.create().encode(text)
+    params = cv2.QRCodeEncoder_Params()
+    params.mode = mode
+    qr = cv2.QRCodeEncoder.create(params).encode(text)
     qr = cv2.resize(qr, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
     qr = cv2.copyMakeBorder(qr, border, border, border, border, cv2.BORDER_CONSTANT, value=255)
     return cv2.cvtColor(qr, cv2.COLOR_GRAY2BGR)
@@ -61,3 +68,30 @@ def test_decodes_qr_code_on_screen_sized_image(scale):
     canvas[300 : 300 + qr.shape[0], 900 : 900 + qr.shape[1]] = qr
 
     assert decode_qr_codes(canvas) == ["on screen"]
+
+
+UTF8_TEXTS = [
+    "こんにちは、OneKey QR",  # Japanese (3-byte UTF-8) mixed with ASCII
+    "日本語のテスト文字列",
+    "Emoji 🎉 test",  # 4-byte UTF-8
+]
+
+
+@pytest.mark.parametrize("text", UTF8_TEXTS)
+@pytest.mark.parametrize(
+    "mode",
+    [cv2.QRCODE_ENCODER_MODE_BYTE, cv2.QRCODE_ENCODER_MODE_ECI],
+    ids=["byte", "eci-utf8"],
+)
+def test_decodes_utf8_text(text, mode):
+    # ECI mode adds a "UTF-8" charset header. OpenCV logs
+    # "ECI is not supported properly" for it, but UTF-8 text must still decode correctly.
+    img = make_qr(text, mode=mode)
+
+    assert decode_qr_codes(img) == [text]
+
+
+def test_decodes_utf8_and_ascii_qr_codes_together():
+    img = side_by_side(make_qr("日本語", mode=cv2.QRCODE_ENCODER_MODE_ECI), make_qr("ascii"))
+
+    assert sorted(decode_qr_codes(img)) == sorted(["日本語", "ascii"])
