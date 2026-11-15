@@ -13,11 +13,11 @@ from __future__ import annotations
 import queue
 import threading
 
-import cv2
 import keyboard
 import mss
 import numpy as np
 import pyperclip
+import zxingcpp
 
 HOTKEY = "windows+shift+q"
 APP_NAME = "OneKey QR"
@@ -47,37 +47,27 @@ def notify(title: str, message: str) -> None:
 
 
 def capture_all_monitors() -> np.ndarray:
-    """Capture all monitors at once and return a BGR image usable by OpenCV."""
+    """Capture all monitors at once and return a BGRA image."""
     with _MSS() as sct:
         # monitors[0] is the virtual screen spanning all monitors
         shot = sct.grab(sct.monitors[0])
-        img = np.array(shot)  # BGRA
-    return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        return np.array(shot)  # BGRA
 
 
 def decode_qr_codes(img: np.ndarray) -> list[str]:
-    """Decode every QR code in the image and return a de-duplicated list of strings."""
-    detector = cv2.QRCodeDetector()
+    """Decode every QR code in the image and return a de-duplicated list of strings.
+
+    `img` is a BGRA (screen capture), BGR or grayscale array.
+    QR Code, Micro QR Code and rMQR Code are recognized.
+    """
+    if img.ndim == 3 and img.shape[2] == 4:
+        # Pass the BGRA capture as-is (no color conversion needed)
+        img = zxingcpp.ImageView(img, img.shape[1], img.shape[0], zxingcpp.ImageFormat.BGRA)
+
     results: list[str] = []
-
-    def collect(target: np.ndarray) -> None:
-        ok, texts, _points, _ = detector.detectAndDecodeMulti(target)
-        if not ok or not any(texts):
-            # detectAndDecodeMulti misses some codes (depending on their size)
-            # that the single-code detector can read, so fall back to it
-            text, _points, _ = detector.detectAndDecode(target)
-            texts = (text,)
-        for t in texts:
-            if t and t not in results:
-                results.append(t)
-
-    collect(img)
-
-    # If nothing was found, retry on a grayscale version
-    if not results:
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        collect(gray)
-
+    for barcode in zxingcpp.read_barcodes(img, formats=zxingcpp.BarcodeFormat.QRCode):
+        if barcode.valid and barcode.text and barcode.text not in results:
+            results.append(barcode.text)
     return results
 
 
