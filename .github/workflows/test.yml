@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   test:
-    # keyboard / win11toast are Windows-only, so test on Windows
+    # The hotkey (Win32 API) and win11toast are Windows-only, so test on Windows
     runs-on: windows-latest
     strategy:
       fail-fast: false
